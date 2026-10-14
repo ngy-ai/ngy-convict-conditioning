@@ -21,6 +21,9 @@
   覆盖式恢复（恢复前会列出备份内容并二次确认）。
 - **原书阅读**：内置《囚徒健身》EPUB，应用内直接解析与阅读——封面、目录、正文与插图，
   记住读到哪一节；六艺详情页的「书中指导」可直接跳到书里对应该式的那一节。
+- **划线**：阅读时选中正文即浮出工具条——复制、马克笔、波浪线、直线（手机长按选中，
+  桌面用鼠标拖选或双击选词，松手就出工具条）；划线存在本地，右上角「本章划线」
+  列出本章全部划线，点一条跳回原文，也可以删掉。
 
 ## 技术栈
 
@@ -31,7 +34,7 @@
 | 本地存储 | sqflite（SQLite） |
 | 路由 | go_router（底部导航用 StatefulShellRoute） |
 | 图表 | fl_chart |
-| 本地偏好 | shared_preferences（皮肤选择、阅读位置） |
+| 本地偏好 | shared_preferences（皮肤选择、阅读位置、阅读划线） |
 | 文件对话框 | file_selector（备份导出/导入） |
 | EPUB 解析 | archive（解 zip）+ xml（读 OPF/NCX）+ html（正文分块） |
 
@@ -76,8 +79,11 @@ test/
   book_asset_test.dart      EPUB 资产与解析依赖（archive / xml / html）的冒烟测试
   book_parser_test.dart     真实书档的元数据、目录、分节与插图解析
   book_locator_test.dart    六艺十式 → 书中章节小节的定位（含 60 式覆盖）
-  book_reader_test.dart     封面/目录/正文渲染、小节跳转与路由参数
+  book_reader_test.dart     封面/目录/正文渲染、小节跳转、选中划线、路由参数
   book_reading_position_test.dart  阅读位置的读取、写入与沿用
+  book_highlight_test.dart  划线切分正文、存档编解码与本地保存
+tool/
+  app_icon/      应用图标母版与出图脚本（见「应用图标」一节）
 ```
 
 ## 运行
@@ -135,6 +141,22 @@ flutter build ios --release          # iOS，需要在 macOS 上执行
 
 > iOS 首次构建时 Flutter 会自动生成 `ios/Podfile` 并执行 `pod install`。
 
+## 应用图标
+
+图标是「鎏金徽章」：深墨底上一枚金色徽章——外圈细金环、内圈一圈念珠（其中六颗稍大，
+暗合「六艺」），正中是金色「囚」。全部矢量式绘制：字形按实际墨迹居中缩放，比例不受
+字体自带留白影响；所有平台尺寸都从同一张 1024 母版缩放，不放大小图、也不带水印。
+
+```bash
+python tool/app_icon/make_icon.py                   # 鎏金徽章（默认）
+python tool/app_icon/make_icon.py --style flat       # 另一路配色：--variant rust / night
+python tool/app_icon/make_icon.py --from 设计稿.png   # 用外部母版（正方形，建议 1024）
+python tool/app_icon/make_icon.py --check            # 只校验三端图标
+```
+
+需要 Pillow（`pip install pillow`）。Android 侧同时生成自适应图标
+（`mipmap-anydpi-v26` + 前景层 + 底色），徽章缩到 72/108 安全区，圆形裁切下不顶边。
+
 ## 数据说明
 
 - 各级标准（组 × 次数）参考《囚徒健身》给出的晋级标准，用于给出训练目标；
@@ -144,6 +166,8 @@ flutter build ios --release          # iOS，需要在 macOS 上执行
   卸载应用会一并删除，**换机或卸载前请先在首页右上角「数据备份」里导出**。
 - 备份文件为 UTF-8 的 JSON，格式与版本号集中在 `lib/data/backup/backup_data.dart`；
   导入是覆盖式的（先清空再写入，同一事务），不会与现有数据合并。
+- 阅读划线记在 `shared_preferences`（键 `book.highlights`，一段 JSON），只存「章 + 小节 +
+  第几段 + 段内字符区间 + 样式」；区间以段落原文为坐标，不含正文首行缩进。
 - 原书在启动后解析一次并常驻内存（约 8 MB）；书里夹的两页来源网站推广页
   （`ad_chapter*.xhtml`）解析时直接跳过。书的用词与动作库不完全一致
   （书里「平卧抬膝」＝动作库「平躺屈膝抬腿」），所以六艺与第几式按序号对应，
