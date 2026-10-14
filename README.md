@@ -157,6 +157,19 @@ python tool/app_icon/make_icon.py --check            # 只校验三端图标
 需要 Pillow（`pip install pillow`）。Android 侧同时生成自适应图标
 （`mipmap-anydpi-v26` + 前景层 + 底色），徽章缩到 72/108 安全区，圆形裁切下不顶边。
 
+## 发布
+
+推 `v*` 标签即触发 GitHub Actions 自动构建 Android APK，并挂到 Releases 页供下载：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+标签触发的 versionName 取标签号（`v1.2.3` → `1.2.3`），versionCode 取工作流运行序号；
+也可以在 Actions 页手动运行「发布构建」，手动运行只在当次运行的 Artifacts 里留存产物。
+APK 用 Flutter 模板自带的 debug 签名，可直接安装。工作流见 `.github/workflows/release.yml`。
+
 ## 数据说明
 
 - 各级标准（组 × 次数）参考《囚徒健身》给出的晋级标准，用于给出训练目标；
