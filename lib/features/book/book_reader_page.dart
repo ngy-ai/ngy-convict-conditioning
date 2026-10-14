@@ -3,10 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/book/book_highlight.dart';
 import '../../data/book/book_models.dart';
 import '../../providers/book_provider.dart';
+import 'highlightable_text.dart';
 
-/// 正文阅读页：按小节顺序排版一章，支持跳到指定小节并记住读到哪一节。
+/// 正文阅读页：按小节顺序排版一章，支持跳到指定小节、选中划线并记住读到哪一节。
 ///
 /// 一章整段渲染（一章最多几十个小节、几百段，比按需构建更省心），
 /// 这样跳到章内任何小节都能直接滚动到位。
@@ -45,6 +47,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   @override
   Widget build(BuildContext context) {
     final bookAsync = ref.watch(bookProvider);
+    final highlights = ref.watch(bookHighlightsProvider);
     final chapter = bookAsync.value?.chapterOf(widget.chapterHref);
     // 封面页、版权页这类章没有标题，退回书名。
     final title = chapter == null || chapter.title.isEmpty
@@ -55,12 +58,19 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       appBar: AppBar(
         title: Text(title),
         actions: [
-          if (chapter != null)
+          if (chapter != null) ...[
+            if (highlights.any((item) => item.chapterHref == chapter.href))
+              IconButton(
+                tooltip: '本章划线',
+                onPressed: () => _showHighlights(chapter),
+                icon: const Icon(Icons.border_color_outlined),
+              ),
             IconButton(
               tooltip: '本章小节',
               onPressed: () => _showSections(chapter),
               icon: const Icon(Icons.toc_outlined),
             ),
+          ],
         ],
       ),
       body: bookAsync.when(
@@ -99,6 +109,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                           key: _keyOf(section),
                           section: section,
                           book: book,
+                          chapterHref: chapter.href,
                           isFirst: section.index == 0,
                         ),
                     ],
@@ -202,6 +213,80 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     _trackTarget(selected);
     _scrollTo(selected);
   }
+
+  /// 本章划线：点一条跳到它所在的小节。
+  Future<void> _showHighlights(BookChapter chapter) async {
+    final selected = await showModalBottomSheet<BookHighlight>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => _ChapterHighlightsSheet(chapter: chapter),
+    );
+
+    if (selected == null || !mounted) return;
+    final section = chapter.sectionByKey(selected.sectionKey);
+    if (section == null) return;
+    _trackTarget(section);
+    _scrollTo(section);
+  }
+}
+
+/// 本章划线列表：点一条跳到那段，右侧的删除按钮去掉这条划线。
+class _ChapterHighlightsSheet extends ConsumerWidget {
+  const _ChapterHighlightsSheet({required this.chapter});
+
+  final BookChapter chapter;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final highlights = [
+      for (final highlight in ref.watch(bookHighlightsProvider))
+        if (highlight.chapterHref == chapter.href) highlight,
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.only(bottom: 16),
+        children: [
+          if (highlights.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 28),
+              child: Center(child: Text('这一章还没有划线')),
+            ),
+          for (final highlight in highlights)
+            ListTile(
+              onTap: () => Navigator.of(context).pop(highlight),
+              leading: Icon(highlightStyleIcon(highlight.style)),
+              title: Text(
+                highlight.text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                _sectionLabel(highlight),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                tooltip: '删除划线',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () =>
+                    ref.read(bookHighlightsProvider.notifier).remove(highlight),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 划线所在小节的标题，用于分辨同名文字。
+  String _sectionLabel(BookHighlight highlight) {
+    final section = chapter.sectionByKey(highlight.sectionKey);
+    if (section == null) return highlight.style.label;
+    final title =
+        section.title.isEmpty ? '第 ${section.index + 1} 节' : section.title;
+    return '${highlight.style.label} · $title';
+  }
 }
 
 /// 一个小节：小节名 + 它的正文块。
@@ -210,11 +295,13 @@ class _SectionView extends StatelessWidget {
     super.key,
     required this.section,
     required this.book,
+    required this.chapterHref,
     required this.isFirst,
   });
 
   final BookSection section;
   final BookDocument book;
+  final String chapterHref;
   final bool isFirst;
 
   @override
@@ -238,18 +325,34 @@ class _SectionView extends StatelessWidget {
                     ),
             ),
           ),
-        for (final block in section.blocks) _BlockView(block: block, book: book),
+        for (var i = 0; i < section.blocks.length; i++)
+          _BlockView(
+            block: section.blocks[i],
+            book: book,
+            blockIndex: i,
+            chapterHref: chapterHref,
+            sectionKey: section.key,
+          ),
       ],
     );
   }
 }
 
-/// 一个正文块：文字按版式排版，插图并排显示。
+/// 一个正文块：文字按版式排版（可选中划线），插图并排显示。
 class _BlockView extends StatelessWidget {
-  const _BlockView({required this.block, required this.book});
+  const _BlockView({
+    required this.block,
+    required this.book,
+    required this.chapterHref,
+    required this.sectionKey,
+    required this.blockIndex,
+  });
 
   final BookBlock block;
   final BookDocument book;
+  final String chapterHref;
+  final String sectionKey;
+  final int blockIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +368,7 @@ class _BlockView extends StatelessWidget {
     return switch (style) {
       BookTextStyle.heading => Padding(
           padding: const EdgeInsets.only(top: 14, bottom: 6),
-          child: Text(
+          child: _selectable(
             text,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
@@ -275,9 +378,10 @@ class _BlockView extends StatelessWidget {
         ),
       BookTextStyle.body => Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: Text(
+          child: _selectable(
+            text,
             // 中文正文首行缩进两格。
-            '\u3000\u3000$text',
+            indent: '\u3000\u3000',
             style: theme.textTheme.bodyLarge?.copyWith(height: 1.8),
           ),
         ),
@@ -289,7 +393,7 @@ class _BlockView extends StatelessWidget {
             color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Text(
+          child: _selectable(
             text,
             style: theme.textTheme.bodyMedium?.copyWith(
               height: 1.6,
@@ -299,6 +403,17 @@ class _BlockView extends StatelessWidget {
         ),
     };
   }
+
+  /// 正文一律走可划线的那块：选中就能复制或画线。
+  Widget _selectable(String text, {String indent = '', TextStyle? style}) =>
+      HighlightableText(
+        chapterHref: chapterHref,
+        sectionKey: sectionKey,
+        blockIndex: blockIndex,
+        text: text,
+        indent: indent,
+        style: style,
+      );
 
   Widget _figure(BuildContext context, List<String> imagePaths) {
     final images = <Uint8List>[

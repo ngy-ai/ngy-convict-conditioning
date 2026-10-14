@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/book/book_highlight.dart';
 import '../data/book/book_locator.dart';
 import '../data/book/book_models.dart';
 import '../data/book/epub_parser.dart';
@@ -67,4 +68,45 @@ class ReadingPositionNotifier extends Notifier<ReadingPosition?> {
 final readingPositionProvider =
     NotifierProvider<ReadingPositionNotifier, ReadingPosition?>(
   ReadingPositionNotifier.new,
+);
+
+// ───────────────────────── 划线 ─────────────────────────
+
+/// 全书划线：一段 JSON 文本存在本地，重启后还在。
+class BookHighlightsNotifier extends Notifier<List<BookHighlight>> {
+  static const _key = 'book.highlights';
+
+  @override
+  List<BookHighlight> build() =>
+      BookHighlight.decodeList(ref.watch(sharedPreferencesProvider).getString(_key));
+
+  /// 画一条划线；同一段同一区间重复画时换成新样式，不留两条。
+  Future<void> add(BookHighlight highlight) async {
+    if (highlight.end <= highlight.start) return;
+    await _save([
+      for (final item in state)
+        if (!item.sameRange(highlight)) item,
+      highlight,
+    ]);
+  }
+
+  Future<void> remove(BookHighlight highlight) async {
+    await _save([
+      for (final item in state)
+        if (item != highlight) item,
+    ]);
+  }
+
+  Future<void> _save(List<BookHighlight> highlights) async {
+    state = List.unmodifiable(highlights);
+    await ref
+        .read(sharedPreferencesProvider)
+        .setString(_key, BookHighlight.encodeList(highlights));
+  }
+}
+
+/// 全部划线，按加入顺序排列。
+final bookHighlightsProvider =
+    NotifierProvider<BookHighlightsNotifier, List<BookHighlight>>(
+  BookHighlightsNotifier.new,
 );
