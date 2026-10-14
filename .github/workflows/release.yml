@@ -1,0 +1,81 @@
+# 推 v* 标签（或在 Actions 页手动运行）即构建 Android APK：
+# 标签触发会把 APK 挂到 Releases 上供下载，手动触发只在页面留存 artifact。
+name: 发布构建
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: 准备 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.4
+          channel: stable
+          cache: true
+
+      - name: 拉依赖
+        run: |
+          # 本机走的 gh-proxy 镜像在 CI 上不需要，直连 github.com
+          sed -i 's|https://gh-proxy.com/https://github.com|https://github.com|' pubspec.yaml
+          flutter pub get
+
+      - name: 构建 release APK（debug 签名，可直接安装）
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            flutter build apk --release \
+              --build-name="${GITHUB_REF_NAME#v}" \
+              --build-number="${GITHUB_RUN_NUMBER}"
+          else
+            flutter build apk --release --build-number="${GITHUB_RUN_NUMBER}"
+          fi
+
+      - name: 整理产物
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "dist/ngy-convict-conditioning-${GITHUB_REF_NAME}.apk"
+
+      - name: 留存构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+  release:
+    name: 挂到 Releases
+    needs: android
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取回构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: 创建 Release 并上传 APK
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+          generate_release_notes: true
+          fail_on_unmatched_files: true
