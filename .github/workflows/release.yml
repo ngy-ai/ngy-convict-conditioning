@@ -48,7 +48,7 @@ jobs:
             echo "::error::缺少签名 Secrets：请在仓库 Settings → Secrets and variables → Actions 配置 KEYSTORE_BASE64、KEYSTORE_PASSWORD、KEY_ALIAS"
             exit 1
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release-keystore.jks
+          echo "$KEYSTORE_BASE64" | tr -d '\n' | base64 -d > android/app/release-keystore.jks
           {
             echo "storePassword=$KEYSTORE_PASSWORD"
             echo "keyPassword=$KEYSTORE_PASSWORD"
