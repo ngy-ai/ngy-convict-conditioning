@@ -168,7 +168,21 @@ git push origin v1.0.0
 
 标签触发的 versionName 取标签号（`v1.2.3` → `1.2.3`），versionCode 取工作流运行序号；
 也可以在 Actions 页手动运行「发布构建」，手动运行只在当次运行的 Artifacts 里留存产物。
-APK 用 Flutter 模板自带的 debug 签名，可直接安装。工作流见 `.github/workflows/release.yml`。
+工作流见 `.github/workflows/release.yml`。
+
+### 正式签名
+
+release 包用正式 keystore 签名（为将来上架做准备）。签名参数从 `android/key.properties`
+读取（该文件不入库）：本地构建时它指向仓库外的 keystore，CI 上由 Secrets 还原：
+
+| Secret | 内容 |
+| --- | --- |
+| `KEYSTORE_BASE64` | keystore 文件的 base64 |
+| `KEYSTORE_PASSWORD` | keystore 密码（store 与 key 同用） |
+| `KEY_ALIAS` | 密钥别名 |
+
+没有 `android/key.properties` 时构建会退回 debug 签名。keystore 与密码请离线备份，
+丢失后无法对同一个包继续更新。
 
 ## 数据说明
 
