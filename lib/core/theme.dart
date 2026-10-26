@@ -54,7 +54,6 @@ class AppTheme {
     onInverseSurface: Color(0xFFF7F1EA),
     inversePrimary: Color(0xFFFFB48F),
     scrollThumb: Color(0xFFC9B9AC),
-    marker: Color(0x85FFD97A),
   );
 
   // ── 深色皮肤「夜铁」 ───────────────────────────────────────────
@@ -87,7 +86,6 @@ class AppTheme {
     onInverseSurface: Color(0xFF322B27),
     inversePrimary: Color(0xFFA8431A),
     scrollThumb: Color(0xFF4A423E),
-    marker: Color(0x40FFC46B),
   );
 
   static ThemeData _build(_Tokens t) {
@@ -400,7 +398,6 @@ class AppTheme {
       listTileTheme: const ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
-      extensions: [BookHighlightTheme(marker: t.marker)],
     );
   }
 }
@@ -436,7 +433,6 @@ class _Tokens {
     required this.onInverseSurface,
     required this.inversePrimary,
     required this.scrollThumb,
-    required this.marker,
   });
 
   /// 页面底色（Scaffold / AppBar）。
@@ -483,30 +479,4 @@ class _Tokens {
 
   /// 滚动条滑块。
   final Color scrollThumb;
-
-  /// 阅读时马克笔划线的底色（半透明，压在正文下面）。
-  final Color marker;
-}
-
-/// 阅读划线的配色：波浪线、直线用主色，马克笔需要一块底色。
-///
-/// 挂在 [ThemeData.extensions] 上，页面层照常只读主题，不判断明暗。
-@immutable
-class BookHighlightTheme extends ThemeExtension<BookHighlightTheme> {
-  const BookHighlightTheme({required this.marker});
-
-  /// 主题没挂这个扩展时的兜底（应用内的主题都挂了）。
-  static const fallback = BookHighlightTheme(marker: Color(0x85FFD97A));
-
-  /// 马克笔划线的底色。
-  final Color marker;
-
-  @override
-  BookHighlightTheme copyWith({Color? marker}) =>
-      BookHighlightTheme(marker: marker ?? this.marker);
-
-  @override
-  BookHighlightTheme lerp(BookHighlightTheme? other, double t) => other == null
-      ? this
-      : BookHighlightTheme(marker: Color.lerp(marker, other.marker, t) ?? marker);
 }

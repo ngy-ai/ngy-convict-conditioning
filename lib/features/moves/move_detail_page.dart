@@ -7,7 +7,6 @@ import '../../data/models/move.dart';
 import '../../data/models/training_plan.dart';
 import '../../domain/progression.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/book_provider.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/stat_tile.dart';
 import '../train/train_page.dart';
@@ -109,7 +108,7 @@ class _CurrentCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(move.cue, style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
-          _BookGuide(move: move),
+          _GuideBlock(guide: move.guide),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -179,83 +178,61 @@ class _CurrentCard extends StatelessWidget {
   }
 }
 
-/// 「书中指导」入口：跳到原书里对应该式的那一节。
-///
-/// 书里的用词与动作库不完全一致（书里「平卧抬膝」＝动作库「平躺屈膝抬腿」），
-/// 所以副标题直接显示书里的小节名，方便对上号。
-class _BookGuide extends ConsumerWidget {
-  const _BookGuide({required this.move, this.compact = false});
+/// 「训练指导」：这一式的技术要点，直接内联展示。
+class _GuideBlock extends StatelessWidget {
+  const _GuideBlock({required this.guide, this.compact = false});
 
-  final Move move;
+  final String guide;
 
-  /// 紧凑模式只放一个文字按钮，用在十式列表里。
+  /// 紧凑模式去掉卡片底色，用在十式阶梯的展开项里。
   final bool compact;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final locator = ref.watch(bookLocatorProvider).value;
-    final reference = locator?.referenceOf(move.exercise, move.level);
-    if (reference == null) return const SizedBox.shrink();
+    final label = Text(
+      '训练指导',
+      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+    );
+    final body = Text(
+      guide,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        height: 1.55,
+      ),
+    );
 
     if (compact) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton.icon(
-          onPressed: () => context.push(reference.route),
-          style: TextButton.styleFrom(
-            minimumSize: const Size(0, 36),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-          ),
-          icon: const Icon(Icons.menu_book_outlined, size: 18),
-          label: const Text('跳到书中阅读'),
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [label, const SizedBox(height: 4), body],
       );
     }
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => context.push(reference.route),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.menu_book_outlined,
-              size: 20,
-              color: theme.colorScheme.primary,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.tips_and_updates_outlined,
+            size: 20,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [label, const SizedBox(height: 4), body],
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '书中指导',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    // 小节名在前：它是这一式的书名，章名太长会被截掉。
-                    '${reference.section.title} · ${reference.chapter.title}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.outline),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -397,7 +374,7 @@ class _MoveTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _BookGuide(move: move, compact: true),
+          _GuideBlock(guide: move.guide, compact: true),
           const SizedBox(height: 10),
           Row(
             children: [

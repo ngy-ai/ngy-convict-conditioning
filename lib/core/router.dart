@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../data/models/big_six.dart';
 import '../features/backup/backup_page.dart';
-import '../features/book/book_page.dart';
-import '../features/book/book_reader_page.dart';
 import '../features/history/history_page.dart';
 import '../features/history/session_detail_page.dart';
 import '../features/home/home_page.dart';
@@ -97,19 +95,6 @@ final appRouter = GoRouter(
       path: '/backup',
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const BackupPage(),
-    ),
-    GoRoute(
-      path: '/book',
-      parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const BookPage(),
-    ),
-    GoRoute(
-      path: '/book/read',
-      parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => BookReaderPage(
-        chapterHref: state.uri.queryParameters['chapter'] ?? '',
-        sectionKey: state.uri.queryParameters['section'],
-      ),
     ),
   ],
 );

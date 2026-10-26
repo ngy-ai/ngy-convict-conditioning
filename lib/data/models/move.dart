@@ -62,6 +62,7 @@ class Move {
     required this.name,
     required this.nameEn,
     required this.cue,
+    required this.guide,
     required this.metric,
     required this.standard,
   });
@@ -75,8 +76,11 @@ class Move {
   final String name;
   final String nameEn;
 
-  /// 动作要领提示。
+  /// 动作要领提示（一句话）。
   final String cue;
+
+  /// 训练指导：起始姿势、关键细节与进阶提示。
+  final String guide;
   final MoveMetric metric;
   final ProgressionStandard standard;
 

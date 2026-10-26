@@ -30,11 +30,6 @@ class HomePage extends ConsumerWidget {
         title: const Text('今日训练'),
         actions: [
           IconButton(
-            tooltip: '原书阅读',
-            onPressed: () => context.push('/book'),
-            icon: const Icon(Icons.menu_book_outlined),
-          ),
-          IconButton(
             tooltip: '数据备份',
             onPressed: () => context.push('/backup'),
             icon: const Icon(Icons.backup_outlined),

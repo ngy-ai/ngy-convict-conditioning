@@ -47,10 +47,6 @@ dependencies:
   fl_chart: ^1.2.0
   shared_preferences: ^2.5.6
   file_selector: ^1.1.0
-  # EPUB 解析：archive 解 zip、xml 读 container.xml / OPF、html 把正文转成纯文本
-  archive: ^4.5.2
-  html: ^0.15.7
-  xml: ^7.0.1
 
 dev_dependencies:
   flutter_test:
@@ -87,11 +83,6 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
-  assets:
-    # 《囚徒健身》电子书：应用运行时直接解析这份 EPUB，正文与插图都取自原书。
-    # 注意：这是本机自用的书档，请勿把带此资产的构建产物对外分发。
-    - assets/book/convict_conditioning.epub
 
   # To add assets to your application, add an assets section, like this:
   # assets:

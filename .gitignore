@@ -49,3 +49,6 @@ app.*.map.json
 android/key.properties
 *.jks
 *.keystore
+
+# 版权书档：不随仓库分发，仅保留在本地
+assets/book/
