@@ -52,3 +52,6 @@ android/key.properties
 
 # 版权书档：不随仓库分发，仅保留在本地
 assets/book/
+
+# 临时缓存
+.cache/

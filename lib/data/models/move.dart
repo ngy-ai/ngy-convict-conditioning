@@ -1,4 +1,5 @@
 import 'big_six.dart';
+import 'move_guide.dart';
 
 /// 计量方式：计次或计时。
 enum MoveMetric {
@@ -79,8 +80,8 @@ class Move {
   /// 动作要领提示（一句话）。
   final String cue;
 
-  /// 训练指导：起始姿势、关键细节与进阶提示。
-  final String guide;
+  /// 详细训练指导：动作、解析与进阶提示。
+  final MoveGuide guide;
   final MoveMetric metric;
   final ProgressionStandard standard;
 

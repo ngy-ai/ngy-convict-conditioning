@@ -108,7 +108,7 @@ class _CurrentCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(move.cue, style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
-          _GuideBlock(guide: move.guide),
+          _GuideBlock(move: move),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -178,11 +178,11 @@ class _CurrentCard extends StatelessWidget {
   }
 }
 
-/// 「训练指导」：这一式的技术要点，直接内联展示。
+/// 「训练指导」入口：点进去是该式的完整指导页（动作、解析、训练目标、稳扎稳打）。
 class _GuideBlock extends StatelessWidget {
-  const _GuideBlock({required this.guide, this.compact = false});
+  const _GuideBlock({required this.move, this.compact = false});
 
-  final String guide;
+  final Move move;
 
   /// 紧凑模式去掉卡片底色，用在十式阶梯的展开项里。
   final bool compact;
@@ -190,49 +190,89 @@ class _GuideBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final route = '/moves/${move.exercise.name}/guide/${move.level}';
+
     final label = Text(
       '训练指导',
       style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
     );
-    final body = Text(
-      guide,
+    final summary = Text(
+      move.guide.action,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
         height: 1.55,
       ),
     );
+    final more = Text(
+      '查看动作、解析与稳扎稳打',
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.primary,
+      ),
+    );
 
     if (compact) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [label, const SizedBox(height: 4), body],
+      return InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => context.push(route),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [label, const SizedBox(height: 2), summary],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: theme.colorScheme.outline,
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.tips_and_updates_outlined,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [label, const SizedBox(height: 4), body],
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => context.push(route),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.tips_and_updates_outlined,
+              size: 20,
+              color: theme.colorScheme.primary,
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  label,
+                  const SizedBox(height: 3),
+                  summary,
+                  const SizedBox(height: 6),
+                  more,
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: theme.colorScheme.outline),
+          ],
+        ),
       ),
     );
   }
@@ -374,7 +414,7 @@ class _MoveTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _GuideBlock(guide: move.guide, compact: true),
+          _GuideBlock(move: move, compact: true),
           const SizedBox(height: 10),
           Row(
             children: [

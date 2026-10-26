@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/models/big_six.dart';
+import '../data/seed/big_six_seed.dart';
 import '../features/backup/backup_page.dart';
 import '../features/history/history_page.dart';
 import '../features/history/session_detail_page.dart';
 import '../features/home/home_page.dart';
 import '../features/moves/move_detail_page.dart';
+import '../features/moves/move_guide_page.dart';
 import '../features/moves/moves_page.dart';
 import '../features/plan/plan_editor_page.dart';
 import '../features/plan/plan_page.dart';
@@ -78,6 +80,17 @@ final appRouter = GoRouter(
       builder: (context, state) => MoveDetailPage(
         exercise: BigSix.fromName(state.pathParameters['exercise'] ?? ''),
       ),
+    ),
+    GoRoute(
+      path: '/moves/:exercise/guide/:level',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) {
+        final exercise = BigSix.fromName(state.pathParameters['exercise'] ?? '');
+        final level = int.tryParse(state.pathParameters['level'] ?? '') ?? 1;
+        return MoveGuidePage(
+          move: MoveCatalog.of(exercise, level.clamp(1, 10)),
+        );
+      },
     ),
     GoRoute(
       path: '/plan/editor',
