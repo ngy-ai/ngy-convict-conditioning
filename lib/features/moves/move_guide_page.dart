@@ -25,7 +25,7 @@ class MoveGuidePage extends StatelessWidget {
         children: [
           _Header(move: move),
           const SizedBox(height: 16),
-          _FigurePlaceholder(move: move),
+          _MoveFigure(move: move),
           const SizedBox(height: 16),
           SectionCard(
             title: '动作',
@@ -118,24 +118,36 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// 示意图位：用六艺图标占位，不复制原书插图。
-class _FigurePlaceholder extends StatelessWidget {
-  const _FigurePlaceholder({required this.move});
+/// 动作示意图：加载按式次命名的剪影插画，缺图时回退到六艺图标。
+class _MoveFigure extends StatelessWidget {
+  const _MoveFigure({required this.move});
 
   final Move move;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(16),
+    final asset = 'assets/move_figures/${move.exercise.name}-${move.level}.png';
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: ColoredBox(
+          color: Colors.white,
+          child: Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => _fallback(theme),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _fallback(ThemeData theme) => Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               move.exercise.icon,
@@ -158,9 +170,7 @@ class _FigurePlaceholder extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _TargetLine extends StatelessWidget {
