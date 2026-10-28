@@ -63,11 +63,27 @@ class _ExerciseCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.14),
-                child: Icon(move.exercise.icon,
-                    color: theme.colorScheme.primary, size: 22),
+              Container(
+                width: 56,
+                height: 56,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Image.asset(
+                  'assets/move_figures/${move.exercise.name}-${move.level}.png',
+                  fit: BoxFit.contain,
+                  cacheWidth: 168,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    move.exercise.icon,
+                    size: 22,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                  ),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(

@@ -343,24 +343,40 @@ class _MoveTile extends StatelessWidget {
       child: ExpansionTile(
         shape: const Border(),
         collapsedShape: const Border(),
-        leading: CircleAvatar(
-          radius: 17,
-          backgroundColor: isCurrent
-              ? theme.colorScheme.primary
-              : theme.colorScheme.primary.withValues(alpha: 0.12),
-          child: Text(
-            '${move.level}',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+        leading: Container(
+          width: 56,
+          height: 56,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
               color: isCurrent
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.primary,
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+              width: isCurrent ? 2 : 1,
+            ),
+          ),
+          child: Image.asset(
+            'assets/move_figures/${move.exercise.name}-${move.level}.png',
+            fit: BoxFit.contain,
+            cacheWidth: 168,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              move.exercise.icon,
+              size: 22,
+              color: theme.colorScheme.primary.withValues(alpha: 0.4),
             ),
           ),
         ),
         title: Row(
           children: [
+            Text(
+              '第${move.level}式',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
                 move.name,
