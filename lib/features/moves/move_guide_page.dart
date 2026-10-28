@@ -118,7 +118,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// 动作示意图：加载按式次命名的剪影插画，缺图时回退到六艺图标。
+/// 动作示意图：单张剪影插画，缺图时回退到六艺图标。
 class _MoveFigure extends StatelessWidget {
   const _MoveFigure({required this.move});
 
@@ -127,50 +127,27 @@ class _MoveFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final asset = 'assets/move_figures/${move.exercise.name}-${move.level}.png';
-
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: ColoredBox(
-          color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: ColoredBox(
+        color: Colors.white,
+        child: AspectRatio(
+          aspectRatio: 1,
           child: Image.asset(
-            asset,
+            'assets/move_figures/${move.exercise.name}-${move.level}.png',
             fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => _fallback(theme),
+            errorBuilder: (context, error, stackTrace) => Center(
+              child: Icon(
+                move.exercise.icon,
+                size: 48,
+                color: theme.colorScheme.primary.withValues(alpha: 0.35),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
-
-  Widget _fallback(ThemeData theme) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              move.exercise.icon,
-              size: 64,
-              color: theme.colorScheme.primary.withValues(alpha: 0.55),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '动作示意',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '按下方「动作」要点完成',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      );
 }
 
 class _TargetLine extends StatelessWidget {
