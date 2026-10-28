@@ -406,9 +406,11 @@ class _MoveTile extends StatelessWidget {
           ],
         ),
         subtitle: Text(
-          '初 ${move.standard.beginner.describe(move.metric)} · '
-          '中 ${move.standard.intermediate.describe(move.metric)} · '
-          '高 ${move.standard.advanced.describe(move.metric)}',
+          '初 ${move.standard.beginner} · '
+          '中 ${move.standard.intermediate} · '
+          '高 ${move.standard.advanced} ${move.metric.unit}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
